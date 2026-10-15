@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tacos Don Arturo - Menú Digital</title>
+  <style>
+    :root {
+      --primary: #2e7d32;
+      --primary-light: #e8f5e9;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); padding-bottom: 110px; max-width: 480px; margin: 0 auto; }
+
+    /* Encabezado Principal */
+    header { background: var(--card-bg); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 20; }
+    .brand-title { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    .mesa-badge { background: var(--primary-light); color: var(--primary); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 4px; }
+
+    /* Navegación Horizontal de Categorías */
+    .categorías-bar { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; background: var(--card-bg); border-bottom: 1px solid #f3f4f6; scrollbar-width: none; position: sticky; top: 57px; z-index: 10; }
+    .categorías-bar::-webkit-scrollbar { display: none; }
+    .cat-btn { background: #f3f4f6; color: var(--text-muted); border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 13px; white-space: nowrap; cursor: pointer; transition: all 0.2s; }
+    .cat-btn.active { background: var(--primary-light); color: var(--primary); }
+
+    /* Grid de Productos (2 Columnas) */
+    .container { padding: 16px; }
+    .cat-section { margin-bottom: 24px; }
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); }
+    .grid-productos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+    /* Tarjeta de Producto */
+    .card-product { background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #f3f4f6; }
+    .product-img { width: 100%; height: 110px; object-fit: cover; background: #e5e7eb; }
+    .product-body { padding: 10px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+    .product-title { font-size: 14px; font-weight: 700; color: var(--text-main); line-height: 1.2; margin-bottom: 4px; min-height: 34px; }
+    .product-price { font-size: 14px; font-weight: 800; color: var(--text-muted); margin-bottom: 10px; }
+
+    /* Botones de Acción / Cantidad */
+    .btn-add { background: var(--primary); color: white; border: none; width: 100%; padding: 8px; border-radius: 20px; font-weight: 700; font-size: 13px; cursor: pointer; }
+    .counter-controls { display: flex; align-items: center; justify-content: space-between; background: var(--primary-light); border-radius: 20px; padding: 2px 4px; }
+    .btn-qty { width: 28px; height: 28px; border: none; background: white; color: var(--primary); border-radius: 50%; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .qty-number { font-weight: 700; color: var(--primary); font-size: 13px; }
+
+    /* Barra Flotante Inferior */
+    .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); padding: 12px 16px; border-top: 1px solid #e5e7eb; box-shadow: 0 -4px 16px rgba(0,0,0,0.06); display: flex; justify-content: center; z-index: 30; }
+    .btn-whatsapp { width: 100%; max-width: 440px; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 30px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+    .btn-whatsapp:disabled { background: #d1d5db; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado -->
+  <header>
+    <div class="brand-title">🌮 Tacos Don Arturo</div>
+    <div class="mesa-badge">
+      Mesa: 
+      <select id="select-mesa" onchange="actualizarMesa(this.value)" style="border:none; background:transparent; color:#2e7d32; font-weight:bold; font-size:12px; outline:none; cursor:pointer;">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="Mostrador / Llevar">Llevar</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Pestañas de Categorías -->
+  <div class="categorías-bar" id="cat-bar"></div>
+
+  <!-- Contenedor Principal de Productos -->
+  <div class="container" id="lista-productos"></div>
+
+  <!-- Barra de Envío WhatsApp -->
+  <div class="bottom-bar">
+    <button id="btn-enviar" class="btn-whatsapp" onclick="enviarPedido()" disabled>
+      <span>Ver Pedido</span>
+      <span>$<span id="total-precio">0.00</span></span>
+    </button>
+  </div>
+
+  <script>
+    // Configuración de tu número de WhatsApp
+    const TELEFONO_WHATSAPP = "5218126519194";
+
+  
+
+    // Catálogo del Menú Tacos Arturo
+    const menúData = [
+      {
+        categoria: "Tradicionales",
+        productos: [
+          { id: 1, nombre: "Tacos de trompo", precio: 100.00, img: "imagenes/tacos-trompo.png" },
+          { id: 2, nombre: "Tacos de carne asada", precio: 100.00, img: "imagenes/tacos-bistec.png" },
+          { id: 3, nombre: "Tacos mixto", precio: 100.00, img: "imagenes/tacosmix.png" }
+        ]
+      },
+      {
+        categoria: "Especiales",
+        productos: [
+          { id: 4, nombre: "Gringa Mediana", precio: 70.00, img: "imagenes/gringa1.png" },
+          { id: 4, nombre: "Gringa Mediana 2 x ", precio: 120.00, img: "imagenes/gringa1.png" },
+          { id: 5, nombre: "Gringa Grande", precio: 120.00, img: "imagenes/gringa1.png" },
+          { id: 6, nombre: "Campechana Mediana", precio: 70.00, img: "imagenes/Picture7.png" },
+          { id: 6, nombre: "Campechana Mediana 2x", precio: 120.00, img: "imagenes/Picture7.png" },
+          { id: 7, nombre: "Campechana Grande", precio: 120.00, img: "imagenes/Picture7.png" },
+          { id: 8, nombre: "Pirata Mediana", precio: 70.00, img: "imagenes/pirata.png" },
+          { id: 9, nombre: "Pirata Grande", precio: 120.00, img: "imagenes/pirata.png" }
+        ]
+      },
+      {
+        categoria: "Tortas",
+        productos: [
+          { id: 10, nombre: "Torta de trompo", precio: 120.00, img: "imagenes/torta-trompo.png" },
+          { id: 11, nombre: "Torta de asada", precio: 120.00, img: "imagenes/torta-bistec.png" },
+          { id: 12, nombre: "Torta mixta", precio: 120.00, img: "imagenes/Picture8.png" }
+        ]
+      },
+      {
+        categoria: "Hamburguesas",
+        productos: [
+          { id: 13, nombre: "Hamburguesa clásica", precio: 70.00, img: "imagenes/Picture9.png" },
+          { id: 14, nombre: "Hamburguesa doble", precio: 100.00, img: "imagenes/Picture9.png" },
+          { id: 15, nombre: "Hamburguesa trompo", precio: 100.00, img: "imagenes/hamburguesa-trompo.png" },
+          { id: 16, nombre: "Hamburguesa c/ salchicha", precio: 100.00, img: "imagenes/hamburguesa-salchicha.png" }
+        ]
+      },
+      {
+        categoria: "Hot Dogs",
+        productos: [
+          { id: 17, nombre: "Hot Dog Clásico", precio: 45.00, img: "imagenes/Picture10.png" },
+          { id: 17, nombre: "Hot Dog Clásico 2 x", precio: 80.00, img: "imagenes/Picture10.png" },
+          { id: 18, nombre: "Hot Dog Salchicha Asar", precio: 65.00, img: "imagenes/Hotdog-asar.png"},
+          { id: 18, nombre: "Hot Dog Salchicha Asar", precio: 120.00, img: "imagenes/Hotdog-asar.png"}
+        ]
+      },
+      {
+        categoria: "Bebidas y Papas",
+        productos: [
+          { id: 21, nombre: "Papas a la francesa", precio: 30.00, img: "imagenes/papas.png" },
+          { id: 22, nombre: "Refresco", precio: 40.00, img: "imagenes/refrescos.png" },
+          { id: 23, nombre: "Agua Ciel 1L", precio: 30.00, img: "imagenes/agua.png" },
+          { id: 23, nombre: "Agua Ciel 1/2", precio: 20.00, img: "imagenes/agua.png" }
+        ]
+      }
+    ];
+
+    const carrito = {};
+    let numeroMesa = "1";
+
+    // Detectar mesa desde la URL o desde el selector
+    function inicializarMesa() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const mesaURL = urlParams.get('mesa');
+      const selectElem = document.getElementById('select-mesa');
+
+      if (mesaURL) {
+        numeroMesa = mesaURL;
+        selectElem.value = mesaURL;
+      } else {
+        numeroMesa = selectElem.value;
+      }
+    }
+
+    function actualizarMesa(nuevaMesa) {
+      numeroMesa = nuevaMesa;
+    }
+
+    // Renderizar Categorías y Productos
+    function cargarVista() {
+      const catBar = document.getElementById('cat-bar');
+      const productosContainer = document.getElementById('lista-productos');
+
+      catBar.innerHTML = '';
+      productosContainer.innerHTML = '';
+
+      menúData.forEach((cat, index) => {
+        const catId = `cat-${index}`;
+        catBar.innerHTML += `<button class="cat-btn ${index === 0 ? 'active' : ''}" onclick="filtrarCat('${catId}', this)">${cat.categoria}</button>`;
+
+        let htmlSection = `
+          <div class="cat-section" id="${catId}">
+            <div class="section-title">${cat.categoria}</div>
+            <div class="grid-productos">
+        `;
+
+        cat.productos.forEach(p => {
+          htmlSection += `
+            <div class="card-product">
+              <img src="${p.img}" class="product-img" alt="${p.nombre}">
+              <div class="product-body">
+                <div>
+                  <div class="product-title">${p.nombre}</div>
+                  <div class="product-price">$${p.precio.toFixed(2)}</div>
+                </div>
+                <div id="btn-container-${p.id}">
+                  <button class="btn-add" onclick="cambiarCantidad(${p.id}, 1)">Agregar</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        htmlSection += `</div></div>`;
+        productosContainer.innerHTML += htmlSection;
+      });
+    }
+
+    function filtrarCat(catId, btn) {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const elem = document.getElementById(catId);
+      if(elem) elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function obtenerProducto(id) {
+      for (const cat of menúData) {
+        const prod = cat.productos.find(p => p.id === id);
+        if (prod) return prod;
+      }
+      return null;
+    }
+
+    function cambiarCantidad(id, cambio) {
+      if (!carrito[id]) carrito[id] = 0;
+      carrito[id] += cambio;
+
+      if (carrito[id] <= 0) delete carrito[id];
+
+      actualizarBotonProducto(id);
+      actualizarTotal();
+    }
+
+    function actualizarBotonProducto(id) {
+      const container = document.getElementById(`btn-container-${id}`);
+      const cant = carrito[id] || 0;
+
+      if (cant > 0) {
+        container.innerHTML = `
+          <div class="counter-controls">
+            <button class="btn-qty" onclick="cambiarCantidad(${id}, -1)">-</button>
+            <span class="qty-number">${cant}</span>
+            <button class="btn-qty" onclick="cambiarCantidad(${id}, 1)">+</button>
+          </div>
+        `;
+     } else {
+       container.innerHTML = `<button class="btn-add" onclick="cambiarCantidad(${id}, 1)">Agregar</button>`;
+     }
+   }
+
+    function actualizarTotal() {
+      let total = 0;
+      let itemsTotales = 0;
+
+      for (const id in carrito) {
+        const prod = obtenerProducto(parseInt(id));
+        total += prod.precio * carrito[id];
+        itemsTotales += carrito[id];
+      }
+
+      document.getElementById('total-precio').innerText = total.toFixed(2);
+      document.getElementById('btn-enviar').disabled = itemsTotales === 0;
+    }
+
+    function enviarPedido() {
+      let detalle = `🌮 *NUEVO PEDIDO - TACOS DON ARTURO*\n📍 *Ubicación:* Mesa ${numeroMesa}\n---------------------------------\n`;
+      let total = 0;
+
+      for (const id in carrito) {
+        const prod = obtenerProducto(parseInt(id));
+        const subtotal = prod.precio * carrito[id];
+        detalle += `• ${carrito[id]}x ${prod.nombre} - $${subtotal.toFixed(2)}\n`;
+        total += subtotal;
+      }
+
+      detalle += `---------------------------------\n💰 *TOTAL:* $${total.toFixed(2)}`;
+
+      const urlWhatsApp = `https://wa.me/${TELEFONO_WHATSAPP}?text=${encodeURIComponent(detalle)}`;
+      window.open(urlWhatsApp, '_blank');
+    }
+
+    // Inicializar menú
+    inicializarMesa();
+    cargarVista();
+  </script>
+</body>
+</html>
